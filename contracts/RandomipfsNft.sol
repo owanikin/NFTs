@@ -3,8 +3,9 @@ pragma solidity ^0.8.7;
 
 import '@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol';
 import '@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol';
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract RandomIpfsNft is VRFConsumerBaseV2 {
+contract RandomIpfsNft is VRFConsumerBaseV2, ERC721 {
     // when we mint an NFT, we will trigger a Chainlink VRF call to get us a random number
     // using that number, we will get a random NFT.
     // Pug, Shiba Inu, St. Bernard
@@ -28,7 +29,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2 {
     // NFT Variables
     uint256 public s_tokenCounter;
 
-    constructor(address vrfCoordinatorV2, uint64 subscriptionId, bytes32 gasLane, uint32 callbackGasLimit) VRFConsumerBaseV2 (vrfCoordinatorV2) {
+    constructor(address vrfCoordinatorV2, uint64 subscriptionId, bytes32 gasLane, uint32 callbackGasLimit) VRFConsumerBaseV2 (vrfCoordinatorV2) ERC721("Random IPFS NFT", "RIN") {
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
         i_subscriptionId = subscriptionId;
         i_gasLane = gasLane;
@@ -52,5 +53,5 @@ contract RandomIpfsNft is VRFConsumerBaseV2 {
         _safeMint(dogOwner, newTokenId);
     }
 
-    function tokenURI(uint256) public {}
+    function tokenURI(uint256) public view override returns (string memory) {}
 }
