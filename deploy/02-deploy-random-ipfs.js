@@ -1,9 +1,21 @@
 const { network, ethers } = require("hardhat")
 const { developmentChains, networkConfig } = require("../helper-hardhat-config")
 const { verify } = require("../utils/verify")
-const { storeImages } = require("../utils/uploadToPinata")
+const { storeImages, storeTokenUriMetadata } = require("../utils/uploadToPinata")
 
 const imagesLocation = "images/randomNft"
+
+const metadataTemplate = {
+    name: "",
+    description: "",
+    image: "",
+    attributes: [
+        {
+            trait_type: "Cuteness",
+            value: 100,
+        }
+    ]
+}
 
 module.exports = async function ({ getNamedAccounts, deployments }) {
     const { deploy, log } = deployments
@@ -28,7 +40,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     }
 
     log("-----------------------")
-    await storeImages(imagesLocation)
+    
     // const args = [
     //     vrfCoordinatorV2Address,
     //     subscriptionId,
@@ -42,8 +54,23 @@ async function handleTokenUris() {
     tokenUris = []
     // store the image in IPFS
     // store the metadata is IPFS
-
+    const { responses: imageUploadResponses, files } = await storeImages(imagesLocation)
+    for (imageUploadResponsesIndex in imageUploadResponses) {
+        // create metadata
+        // upload the metadata
+        let tokenUriMetadata = { ...metadataTemplate }
+        tokenUriMetadata.name = files[imageUploadResponsesIndex].replace(".png", "")
+        tokenUriMetadata.description = `An adorable ${tokenUriMetadata.name} pup!`
+        tokenUriMetadata.image = `ipfs://${imageUploadResponses[imageUploadResponsesIndex].IpfsHash}`
+        console.log(`Uploading ${tokenUriMetadata.name}...`);
+        // store the JSON to pinata
+        const metadataUploadResponse = await storeTokenUriMetadata(tokenUriMetadata)
+        tokenUris.push(`ipfs://${metadataUploadResponse.IpfsHash}`)
+    }
+    console.log("Token URIs Uploaded! They are:");
+    console.log(tokenUris);
     return tokenUris
 }
+
 
 module.exports.tags = ["all", "randomipfs", "main"]
