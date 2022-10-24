@@ -438,8 +438,8 @@
       ]
     },
     "/Users/test./codes/fc-pc-solidity/hardhat-nft-fcc/contracts/RandomipfsNft.sol": {
-      "lastModificationDate": 1666357505468,
-      "contentHash": "47992317fd812375b8e14f4e4db0f08f",
+      "lastModificationDate": 1666625318696,
+      "contentHash": "9bd35f5c85a653b2e0f7f3c68a082406",
       "sourceName": "contracts/RandomipfsNft.sol",
       "solcConfig": {
         "version": "0.8.9",

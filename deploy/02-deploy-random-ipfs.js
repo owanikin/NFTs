@@ -13,15 +13,19 @@ const metadataTemplate = {
         {
             trait_type: "Cuteness",
             value: 100,
-        }
-    ]
+        },
+    ],
 }
 
 module.exports = async function ({ getNamedAccounts, deployments }) {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
-    const chainId = network.config.chainId;
-    let tokenUris
+    const chainId = network.config.chainId
+    let tokenUris = [
+        "ipfs://QmaVkBn2tKmjbhphU7eyztbvSQU5EXDdqRyXZtRhSGgJGo",
+        "ipfs://QmYQC5aGZu2PTH8XzbJrbDnvhj3gVs7ya33H9mqUNvST3d",
+        "ipfs://QmZYmH5iDbD6v3U2ixoVAjioSzvWJszDzYdbeCLquGSpVm",
+    ]
     if (process.env.UPLOAD_TO_PINATA == "true") {
         tokenUris = await handleTokenUris()
     }
@@ -33,21 +37,37 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
         vrfCoordinatorV2Address = vrfCoordinatorV2Mock.address
         const tx = await vrfCoordinatorV2Mock.createSubscription()
         const txReceipt = await tx.wait(1)
-        subscriptionId = txReceipt.events[0].args.subId        
+        subscriptionId = txReceipt.events[0].args.subId
+        
     } else {
         vrfCoordinatorV2Address = networkConfig[chainId].vrfCoordinatorV2
         subscriptionId = networkConfig[chainId].subscriptionId
     }
 
     log("-----------------------")
-    
-    // const args = [
-    //     vrfCoordinatorV2Address,
-    //     subscriptionId,
-    //     networkConfig[chainId].gasLane,
-    //     networkConfig[chainId].callbackGasLimit,
-    //     networkConfig[chainId].mintFee,
-    // ]
+
+    const args = [
+        vrfCoordinatorV2Address,
+        subscriptionId,
+        networkConfig[chainId].gasLane,
+        networkConfig[chainId].callbackGasLimit,
+        tokenUris,
+        networkConfig[chainId].mintFee,
+    ]
+
+    const randomIpfsNft = await deploy("RandomIpfsNft", {
+        from: deployer,
+        args: args,
+        log: true,
+        waitConfirmations: network.config.blockConfirmations || 1,
+    })
+
+    log("-----------------------")
+
+    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
+        log("Verifying....")
+        await verify(randomIpfsNft.address, args)
+    }
 }
 
 async function handleTokenUris() {
@@ -62,15 +82,14 @@ async function handleTokenUris() {
         tokenUriMetadata.name = files[imageUploadResponsesIndex].replace(".png", "")
         tokenUriMetadata.description = `An adorable ${tokenUriMetadata.name} pup!`
         tokenUriMetadata.image = `ipfs://${imageUploadResponses[imageUploadResponsesIndex].IpfsHash}`
-        console.log(`Uploading ${tokenUriMetadata.name}...`);
+        console.log(`Uploading ${tokenUriMetadata.name}...`)
         // store the JSON to pinata
         const metadataUploadResponse = await storeTokenUriMetadata(tokenUriMetadata)
         tokenUris.push(`ipfs://${metadataUploadResponse.IpfsHash}`)
     }
-    console.log("Token URIs Uploaded! They are:");
-    console.log(tokenUris);
+    console.log("Token URIs Uploaded! They are:")
+    console.log(tokenUris)
     return tokenUris
 }
-
 
 module.exports.tags = ["all", "randomipfs", "main"]
