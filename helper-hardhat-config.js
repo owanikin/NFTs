@@ -46,7 +46,8 @@ const networkConfig = {
         gasLane: "0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc",
         callbackGasLimit: "500000",
         interval: "30",
-        mintFee: "10000000000000000"
+        mintFee: "10000000000000000",
+        ethUsdPriceFeed: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e"
     }
 }
 
